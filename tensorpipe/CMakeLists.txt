@@ -162,6 +162,52 @@ if(TP_USE_CUDA)
   endif()
 endif()
 
+## ROCm Channels
+
+if(TP_USE_ROCM)
+  list(APPEND TP_ROCM_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/cuda_buffer.cc")
+  list(APPEND TP_ROCM_HDRS
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/cuda_buffer.h")
+  set(TENSORPIPE_SUPPORTS_ROCM 1)
+
+  ### hip_xth
+
+  list(APPEND TP_ROCM_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_xth/channel_impl.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_xth/context_impl.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_xth/factory.cc"
+    )
+  list(APPEND TP_ROCM_HDRS
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_xth/factory.h")
+
+  ### hip_basic
+
+  list(APPEND TP_ROCM_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_basic/channel_impl.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_basic/context_impl.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_basic/factory.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/cuda_loop.cc"
+    )
+  list(APPEND TP_ROCM_HDRS
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_basic/factory.h")
+
+  ### hip_ipc
+
+  tp_conditional_backend(
+    TP_ENABLE_ROCM_IPC "Enable CUDA inter-process communication channel" "TP_USE_ROCM")
+  if(TP_ENABLE_ROCM_IPC)
+#    list(APPEND TP_CUDA_SRCS
+#      "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_ipc/channel_impl.cc"
+#      "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_ipc/context_impl.cc"
+#      "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_ipc/factory.cc"
+#      )
+#    list(APPEND TP_CUDA_HDRS
+#      "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_ipc/factory.h")
+    set(TENSORPIPE_HAS_ROCM_IPC_CHANNEL 0)
+  endif()
+endif()
+
 ## Transports
 
 ### uv

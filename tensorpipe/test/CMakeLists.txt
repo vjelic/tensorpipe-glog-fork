@@ -95,6 +95,35 @@ if(TP_USE_CUDA)
     )
 endif()
 
+if(TP_USE_ROCM)
+  list(APPEND TP_TEST_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/channel_test_cuda.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/channel_test_cuda_multi_gpu.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/cuda_test.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/cuda_test.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/pipe_cuda_test.cc"
+    )
+
+  list(APPEND TP_TEST_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_xth/cuda_xth_test.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_basic/cuda_basic_test.cc"
+    )
+
+  if(TP_ENABLE_ROCM_IPC)
+#    list(APPEND TP_TEST_SRCS
+#      "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_ipc/cuda_ipc_test.cc"
+#      )
+  endif()
+
+  list(APPEND TP_TEST_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/cuda_gdr/cuda_gdr_test.cc"
+    )
+
+  list(APPEND TP_TEST_ROCM_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/channel/kernel.cu"
+    )
+endif()
+
 add_executable(tensorpipe_test ${TP_TEST_SRCS})
 
 if(TP_USE_CUDA)
