@@ -9,6 +9,8 @@
 import os
 import sys
 import argparse
+import json
+
 sys.path.append(os.path.realpath(os.path.join(
     __file__,
     os.path.pardir,
@@ -31,6 +33,12 @@ parser.add_argument(
     help="The Directory to Store the Hipified Project",
     required=True)
 
+parser.add_argument(
+    '--dump-dict-directory',
+     type=str,
+     help="The Directory to Store the return dict output after hipification",
+     required=True)
+
 args = parser.parse_args()
 
 includes = [
@@ -47,3 +55,9 @@ HipifyFinalResult = hipify_python.hipify(
     includes=includes,
     ignores=ignores,
     is_pytorch_extension=True)
+
+#print("*************Return value of hipification =", HipifyFinalResult)
+
+dict_file_name = args.dump_dict_directory + "/hipify_output_dict_dump.txt"
+with open(dict_file_name, 'w') as dict_file:
+    dict_file.write(json.dumps(HipifyFinalResult))

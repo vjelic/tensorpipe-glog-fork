@@ -11,6 +11,7 @@ set(HIPIFY_COMMAND
   ${HIPIFY_SCRIPTS_DIR}/build_amd.py
   --project-directory ${PROJECT_SOURCE_DIR}
   --output-directory ${PROJECT_SOURCE_DIR}
+  --dump-dict-directory ${CMAKE_BINARY_DIR}
 )
 
 execute_process(

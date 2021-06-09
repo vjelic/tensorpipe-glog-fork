@@ -13,6 +13,37 @@ set(TP_CUDA_PRIVATE_SRCS)
 set(TP_PUBLIC_HDRS)
 set(TP_CUDA_HDRS)
 
+function(write_file_list FILE_SUFFIX INPUT_LIST)
+  message(STATUS "Writing ${FILE_SUFFIX} into file - file_${FILE_SUFFIX}.txt")
+  set(_FULL_FILE_NAME "${CMAKE_BINARY_DIR}/cuda_to_hip_list_${FILE_SUFFIX}.txt")
+  file(WRITE ${_FULL_FILE_NAME} "")
+  foreach(_SOURCE_FILE ${INPUT_LIST})
+    file(APPEND ${_FULL_FILE_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/${_SOURCE_FILE})
+    file(APPEND ${_FULL_FILE_NAME} "\n")
+  endforeach()
+endfunction()
+
+function(get_file_list FILE_SUFFIX OUTPUT_LIST)
+  set(_FULL_FILE_NAME "${CMAKE_BINARY_DIR}/cuda_to_hip_list_${FILE_SUFFIX}.txt")
+  file(STRINGS ${_FULL_FILE_NAME} _FILE_LIST)
+  set(${OUTPUT_LIST} ${_FILE_LIST} PARENT_SCOPE)
+endfunction()
+
+function(get_hipified_list FILE_SUFFIX)
+  set(_SCRIPTS_DIR ${PROJECT_SOURCE_DIR}/tools/amd_build)
+  set(_FULL_FILE_NAME "${CMAKE_BINARY_DIR}/cuda_to_hip_list_${FILE_SUFFIX}.txt")
+  set(_EXE_COMMAND
+    ${_SCRIPTS_DIR}/replace_cuda_with_hip_files.py
+    --io-file ${_FULL_FILE_NAME}
+    --dump-dict-directory ${CMAKE_BINARY_DIR})
+  execute_process(
+    COMMAND ${_EXE_COMMAND}
+    RESULT_VARIABLE _return_value)
+  if (NOT _return_value EQUAL 0)
+    message(FATAL_ERROR "Failed to get the list of hipified files!")
+  endif()
+endfunction()
+
 list(APPEND TP_PUBLIC_SRCS
   channel/error.cc
   channel/helpers.cc
@@ -214,6 +245,22 @@ if(TP_USE_CUDA)
   list(APPEND TP_PRIVATE_SRCS ${TP_CUDA_PRIVATE_SRCS})
   list(APPEND TP_PUBLIC_HDRS ${TP_CUDA_HDRS})
 endif()
+
+#file(WRITE tp_private_srcs.txt ${TP_PRIVATE_SRCS})
+#set(FILE_TP_PRIVATE_SRCS "${CMAKE_BINARY_DIR}/tp_private_srcs.txt")
+#file(WRITE ${FILE_TP_PRIVATE_SRCS} "")
+#foreach(_source_file ${TP_PRIVATE_SRCS})
+#  file(APPEND ${FILE_TP_PRIVATE_SRCS} ${_source_file})
+#  file(APPEND ${FILE_TP_PRIVATE_SRCS} "\n")
+#endforeach()
+
+write_file_list("TP_PRIVATE_SRCS" "${TP_PRIVATE_SRCS}")
+get_hipified_list("TP_PRIVATE_SRCS")
+get_file_list("TP_PRIVATE_SRCS" NEW_TP_PRIVATE_SRCS)
+#file(STRINGS ${FILE_TP_PRIVATE_SRCS} NEW_TP_PRIVATE_SRCS)
+
+message(INFO "read tp private output _________________((((((((((((((((()))))))))))))))))))))))   ${NEW_TP_PRIVATE_SRCS}")
+message(INFO "original tp private output _________________((((((((((((((((()))))))))))))))))))))))   ${TP_PRIVATE_SRCS}")
 
 # Add the library target
 add_library(tensorpipe ${TP_STATIC_OR_SHARED} ${TP_PUBLIC_SRCS})
