@@ -8,10 +8,12 @@
 set(TP_PUBLIC_SRCS)
 set(TP_PRIVATE_SRCS)
 set(TP_CUDA_PRIVATE_SRCS)
+set(TP_ROCM_PRIVATE_SRCS)
 
 # List of header files that we need to install.
 set(TP_PUBLIC_HDRS)
 set(TP_CUDA_HDRS)
+set(TP_ROCM_HDRS)
 
 function(write_file_list FILE_SUFFIX INPUT_LIST)
   message(STATUS "Writing ${FILE_SUFFIX} into file - file_${FILE_SUFFIX}.txt")
@@ -180,6 +182,69 @@ if(TP_USE_CUDA)
   endif()
 endif()
 
+if(TP_USE_ROCM)
+  list(APPEND TP_ROCM_PRIVATE_SRCS
+    common/hip_buffer.cc)
+  list(APPEND TP_ROCM_HDRS
+    common/hip_buffer.h)
+  set(TENSORPIPE_SUPPORTS_CUDA 1)
+
+  ### hip_basic
+
+  file(GLOB _temp_list
+    channel/hip_basic/*.cc)
+  list(APPEND TP_ROCM_PRIVATE_SRCS
+    ${_temp_list})
+  list(APPEND TP_ROCM_PRIVATE_SRCS
+    common/hip_loop.cc)
+  list(APPEND TP_ROCM_HDRS
+    channel/hip_basic/factory.h)
+
+  ### hip_xth
+
+  tp_conditional_backend(
+    TP_ENABLE_HIP_XTH "Enable HIP XTH communication channel" "TP_USE_ROCM")
+  if(TP_ENABLE_HIP_XTH)
+    file(GLOB _temp_list
+      channel/hip_xth/*.cc)
+    list(APPEND TP_ROCM_PRIVATE_SRCS
+      ${_temp_list})
+    list(APPEND TP_ROCM_HDRS
+      channel/hip_xth/factory.h)
+  endif()
+
+  ### hip_ipc
+
+  tp_conditional_backend(
+    TP_ENABLE_HIP_IPC "Enable HIP inter-process communication channel" "TP_USE_ROCM")
+  if(TP_ENABLE_HIP_IPC)
+    file(GLOB _temp_list
+      channel/hip_ipc/*.cc)
+    list(APPEND TP_ROCM_PRIVATE_SRCS
+      ${_temp_list})
+    list(APPEND TP_ROCM_HDRS
+      channel/hip_ipc/factory.h)
+    set(TENSORPIPE_HAS_CUDA_IPC_CHANNEL 1)
+  endif()
+
+  ### hip_gdr
+
+  tp_conditional_backend(
+    TP_ENABLE_HIP_GDR "Enable HIP GpuDirect (InfiniBand) channel" "LINUX")
+  if(TP_ENABLE_HIP_GDR)
+    file(GLOB _temp_list
+      channel/hip_gdr/*.cc)
+    list(APPEND TP_ROCM_PRIVATE_SRCS
+      ${_temp_list})
+    list(APPEND TP_ROCM_PRIVATE_SRCS
+      common/ibv.cc)
+    list(APPEND TP_ROCM_HDRS
+      channel/hip_gdr/error.h)
+      channel/hip_gdr/factory.h)
+    set(TENSORPIPE_HAS_CUDA_GDR_CHANNEL 1)
+  endif()
+endif()
+
 ## Transports
 
 ### uv
@@ -246,21 +311,14 @@ if(TP_USE_CUDA)
   list(APPEND TP_PUBLIC_HDRS ${TP_CUDA_HDRS})
 endif()
 
-#file(WRITE tp_private_srcs.txt ${TP_PRIVATE_SRCS})
-#set(FILE_TP_PRIVATE_SRCS "${CMAKE_BINARY_DIR}/tp_private_srcs.txt")
-#file(WRITE ${FILE_TP_PRIVATE_SRCS} "")
-#foreach(_source_file ${TP_PRIVATE_SRCS})
-#  file(APPEND ${FILE_TP_PRIVATE_SRCS} ${_source_file})
-#  file(APPEND ${FILE_TP_PRIVATE_SRCS} "\n")
-#endforeach()
+if(TP_USE_ROCM)
+  list(APPEND TP_PRIVATE_SRCS ${TP_ROCM_PRIVATE_SRCS})
+  list(APPEND TP_PUBLIC_HDRS ${TP_ROCM_HDRS})
+endif()
 
-write_file_list("TP_PRIVATE_SRCS" "${TP_PRIVATE_SRCS}")
-get_hipified_list("TP_PRIVATE_SRCS")
-get_file_list("TP_PRIVATE_SRCS" NEW_TP_PRIVATE_SRCS)
-#file(STRINGS ${FILE_TP_PRIVATE_SRCS} NEW_TP_PRIVATE_SRCS)
-
-message(INFO "read tp private output _________________((((((((((((((((()))))))))))))))))))))))   ${NEW_TP_PRIVATE_SRCS}")
-message(INFO "original tp private output _________________((((((((((((((((()))))))))))))))))))))))   ${TP_PRIVATE_SRCS}")
+#write_file_list("TP_PRIVATE_SRCS" "${TP_PRIVATE_SRCS}")
+#get_hipified_list("TP_PRIVATE_SRCS")
+#get_file_list("TP_PRIVATE_SRCS" NEW_TP_PRIVATE_SRCS)
 
 # Add the library target
 add_library(tensorpipe ${TP_STATIC_OR_SHARED} ${TP_PUBLIC_SRCS})
