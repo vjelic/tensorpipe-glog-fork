@@ -21,9 +21,14 @@ include(Sanitize)
 # Misc checks to cope with various compiler modes.
 include(MiscCheck)
 
-# Trigger hipify if it is ROCm build
+# ROCm related
 if (TP_USE_ROCM)
+  include(Hip)
+  if(TP_HAVE_HIP)
     include(Hipify)
+  else()
+    message(FATAL_ERROR "Not able to find HIP installation, so cant compile with ROCm support.")
+  endif()
 endif()
 
 add_subdirectory(tensorpipe)

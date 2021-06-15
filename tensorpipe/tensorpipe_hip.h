@@ -62,11 +62,11 @@
 #include <tensorpipe/channel/hip_basic/factory.h>
 #include <tensorpipe/channel/hip_xth/factory.h>
 
-#if TENSORPIPE_HAS_CUDA_GDR_CHANNEL && !defined (__HIP_PLATFORM_HCC__)
+#if TENSORPIPE_HAS_CUDA_GDR_CHANNEL
 #include <tensorpipe/channel/hip_gdr/factory.h>
 #endif // TENSORPIPE_HAS_CUDA_GDR_CHANNEL
 
-#if TENSORPIPE_HAS_CUDA_IPC_CHANNEL && !defined (__HIP_PLATFORM_HCC__)
+#if TENSORPIPE_HAS_CUDA_IPC_CHANNEL
 #include <tensorpipe/channel/hip_ipc/factory.h>
 #endif // TENSORPIPE_HAS_CUDA_IPC_CHANNEL
 #endif // TENSORPIPE_SUPPORTS_CUDA

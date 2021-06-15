@@ -192,6 +192,10 @@ if(TP_USE_CUDA)
 endif()
 
 if(TP_USE_ROCM)
+  # Finding of HIP package is already before hipifying the files
+  list(APPEND TP_LINK_LIBRARIES ${TP_HIP_HCC_LIBRARIES})
+  list(APPEND TP_INCLUDE_DIRS ${TP_HIP_INCLUDE})
+
   list(APPEND TP_ROCM_SRCS
     common/hip_buffer.cc)
   list(APPEND TP_PUBLIC_ROCM_HDRS
@@ -248,7 +252,7 @@ if(TP_USE_ROCM)
     list(APPEND TP_ROCM_SRCS
       common/ibv.cc)
     list(APPEND TP_PUBLIC_ROCM_HDRS
-      channel/hip_gdr/error.h)
+      channel/hip_gdr/error.h
       channel/hip_gdr/factory.h)
     set(TENSORPIPE_HAS_CUDA_GDR_CHANNEL 1)
   endif()
