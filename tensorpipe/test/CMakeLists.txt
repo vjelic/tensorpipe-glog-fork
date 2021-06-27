@@ -70,6 +70,7 @@ if(TP_USE_CUDA)
   find_package(CUDA REQUIRED)
   list(APPEND TP_TEST_LINK_LIBRARIES ${CUDA_LIBRARIES})
   target_include_directories(tensorpipe_test PRIVATE ${CUDA_INCLUDE_DIRS})
+  target_compile_definitions(tensorpipe_test PRIVATE TP_USE_CUDA)
 
   list(APPEND TP_TEST_CUDA_SRCS
     channel/channel_test_cuda.cc
@@ -101,6 +102,8 @@ if(TP_USE_CUDA)
     )
   cuda_add_library(tensorpipe_cuda_kernel ${TP_TEST_CUDA_KERNEL_SRCS})
   list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_cuda_kernel)
+
+  list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_cuda)
 endif()
 
 
