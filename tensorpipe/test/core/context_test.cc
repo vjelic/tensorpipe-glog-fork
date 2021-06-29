@@ -17,10 +17,10 @@
 #include <tensorpipe/tensorpipe.h>
 #include <tensorpipe/test/peer_group.h>
 
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
 #include <tensorpipe/common/cuda.h>
 #include <tensorpipe/tensorpipe_cuda.h>
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
 
 using namespace tensorpipe;
 
@@ -62,7 +62,7 @@ namespace {
   return ::testing::AssertionSuccess();
 }
 
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
 std::vector<uint8_t> unwrapCudaBuffer(CudaBuffer b, size_t length) {
   std::vector<uint8_t> result(length);
   TP_CUDA_CHECK(cudaStreamSynchronize(b.stream));
@@ -70,7 +70,7 @@ std::vector<uint8_t> unwrapCudaBuffer(CudaBuffer b, size_t length) {
 
   return result;
 }
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
 
 ::testing::AssertionResult descriptorAndAllocationMatchMessage(
     const Descriptor& descriptor,
@@ -108,7 +108,7 @@ std::vector<uint8_t> unwrapCudaBuffer(CudaBuffer b, size_t length) {
           descriptor.tensors[idx].length,
           message.tensors[idx].buffer.unwrap<CpuBuffer>().ptr,
           message.tensors[idx].length));
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
     } else if (deviceType == kCudaDeviceType) {
       std::vector<uint8_t> buffer1 = unwrapCudaBuffer(
           allocation.tensors[idx].buffer.unwrap<CudaBuffer>(),
@@ -118,7 +118,7 @@ std::vector<uint8_t> unwrapCudaBuffer(CudaBuffer b, size_t length) {
           message.tensors[idx].length);
       EXPECT_TRUE(buffersAreEqual(
           buffer1.data(), buffer1.size(), buffer2.data(), buffer2.size()));
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
     } else {
       ADD_FAILURE() << "Unexpected device type: " << deviceType;
     }
@@ -126,7 +126,7 @@ std::vector<uint8_t> unwrapCudaBuffer(CudaBuffer b, size_t length) {
   return ::testing::AssertionSuccess();
 }
 
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
 struct CudaPointerDeleter {
   void operator()(void* ptr) {
     TP_CUDA_CHECK(cudaFree(ptr));
@@ -138,7 +138,7 @@ std::unique_ptr<void, CudaPointerDeleter> makeCudaPointer(size_t length) {
   TP_CUDA_CHECK(cudaMalloc(&cudaPtr, length));
   return std::unique_ptr<void, CudaPointerDeleter>(cudaPtr);
 }
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
 
 // Having 4 payloads per message is arbitrary.
 constexpr int kNumPayloads = 4;
@@ -147,13 +147,13 @@ constexpr int kNumPayloads = 4;
 constexpr int kNumTensors = 4;
 std::string kPayloadData = "I'm a payload";
 std::string kTensorData = "And I'm a tensor";
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
 const int kCudaTensorLength = 32;
 const uint8_t kCudaTensorFillValue = 0x42;
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
 
 Message::Tensor makeTensor(int index) {
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
   static std::unique_ptr<void, CudaPointerDeleter> kCudaTensorData = []() {
     auto cudaPtr = makeCudaPointer(kCudaTensorLength);
     TP_CUDA_CHECK(
@@ -172,7 +172,7 @@ Message::Tensor makeTensor(int index) {
         .length = kCudaTensorLength,
     };
   }
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
 
   return {
       .buffer =
@@ -219,7 +219,7 @@ Allocation allocateForDescriptor(
           .buffer = CpuBuffer{.ptr = tensorData.get()},
       });
       buffers.push_back(std::move(tensorData));
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
     } else if (tensor.sourceDevice.type == kCudaDeviceType) {
       auto tensorData = makeCudaPointer(tensor.length);
       allocation.tensors.push_back({
@@ -231,7 +231,7 @@ Allocation allocateForDescriptor(
               },
       });
       buffers.push_back(std::move(tensorData));
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
     } else {
       ADD_FAILURE() << "Unrecognized device type: " << tensor.sourceDevice.type;
     }
@@ -295,14 +295,14 @@ std::shared_ptr<Context> makeContext() {
 #if TENSORPIPE_HAS_CMA_CHANNEL
   context->registerChannel(1, "cma", channel::cma::create());
 #endif // TENSORPIPE_HAS_CMA_CHANNEL
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
   context->registerChannel(
       10, "cuda_basic", channel::cuda_basic::create(channel::basic::create()));
 #if TENSORPIPE_HAS_CUDA_IPC_CHANNEL
   context->registerChannel(11, "cuda_ipc", channel::cuda_ipc::create());
 #endif // TENSORPIPE_HAS_CUDA_IPC_CHANNEL
   context->registerChannel(12, "cuda_xth", channel::cuda_xth::create());
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
 
   return context;
 }

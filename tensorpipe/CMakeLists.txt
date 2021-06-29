@@ -10,37 +10,6 @@ set(TP_SRCS)
 # TP_PUBLIC_HDRS is the list of public header files that we need to install.
 set(TP_PUBLIC_HDRS)
 
-function(write_file_list FILE_SUFFIX INPUT_LIST)
-  message(STATUS "Writing ${FILE_SUFFIX} into file - file_${FILE_SUFFIX}.txt")
-  set(_FULL_FILE_NAME "${CMAKE_BINARY_DIR}/cuda_to_hip_list_${FILE_SUFFIX}.txt")
-  file(WRITE ${_FULL_FILE_NAME} "")
-  foreach(_SOURCE_FILE ${INPUT_LIST})
-    file(APPEND ${_FULL_FILE_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/${_SOURCE_FILE})
-    file(APPEND ${_FULL_FILE_NAME} "\n")
-  endforeach()
-endfunction()
-
-function(get_file_list FILE_SUFFIX OUTPUT_LIST)
-  set(_FULL_FILE_NAME "${CMAKE_BINARY_DIR}/cuda_to_hip_list_${FILE_SUFFIX}.txt")
-  file(STRINGS ${_FULL_FILE_NAME} _FILE_LIST)
-  set(${OUTPUT_LIST} ${_FILE_LIST} PARENT_SCOPE)
-endfunction()
-
-function(get_hipified_list FILE_SUFFIX)
-  set(_SCRIPTS_DIR ${PROJECT_SOURCE_DIR}/tools/amd_build)
-  set(_FULL_FILE_NAME "${CMAKE_BINARY_DIR}/cuda_to_hip_list_${FILE_SUFFIX}.txt")
-  set(_EXE_COMMAND
-    ${_SCRIPTS_DIR}/replace_cuda_with_hip_files.py
-    --io-file ${_FULL_FILE_NAME}
-    --dump-dict-directory ${CMAKE_BINARY_DIR})
-  execute_process(
-    COMMAND ${_EXE_COMMAND}
-    RESULT_VARIABLE _return_value)
-  if (NOT _return_value EQUAL 0)
-    message(FATAL_ERROR "Failed to get the list of hipified files!")
-  endif()
-endfunction()
-
 # TP_LINK_LIBRARIES is list of dependent libraries to be linked
 set(TP_LINK_LIBRARIES)
 
@@ -196,9 +165,6 @@ if(TP_ENABLE_IBV)
   set(TENSORPIPE_HAS_IBV_TRANSPORT 1)
 endif()
 
-#write_file_list("TP_SRCS" "${TP_SRCS}")
-#get_hipified_list("TP_SRCS")
-#get_file_list("TP_SRCS" NEW_TP_SRCS)
 
 ## MAC OS specific library deps
 

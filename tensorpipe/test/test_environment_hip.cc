@@ -9,19 +9,19 @@
 
 #include <tensorpipe/test/test_environment.h>
 
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
 #include <hip/hip_runtime.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <tensorpipe/common/hip.h>
 #include <tensorpipe/common/defs.h>
 #include <unistd.h>
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
 
 int TestEnvironment::numCudaDevices() {
   static int count = -1;
   if (count == -1) {
-#if TP_USE_CUDA
+#if TP_USE_CUDA || TP_USE_ROCM
     pid_t pid = fork();
     TP_THROW_SYSTEM_IF(pid < 0, errno) << "Failed to fork";
     if (pid == 0) {
@@ -35,9 +35,9 @@ int TestEnvironment::numCudaDevices() {
       TP_THROW_ASSERT_IF(!WIFEXITED(status));
       count = WEXITSTATUS(status);
     }
-#else // TP_USE_CUDA
+#else // TP_USE_CUDA || TP_USE_ROCM
     count = 0;
-#endif // TP_USE_CUDA
+#endif // TP_USE_CUDA || TP_USE_ROCM
   }
 
   return count;
