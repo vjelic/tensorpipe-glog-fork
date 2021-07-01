@@ -32,23 +32,16 @@ json_string = file_obj.read()
 file_obj.close()
 hipfied_result = json.loads(json_string)
 
-print(hipfied_result)
-
 out_list = []
 with open(args.io_file) as inp_file:
     for line in inp_file:
         line = line.strip()
         if line in hipfied_result:
-            print("read from dict")
             out_list.append(hipfied_result[line]['hipified_path'])
         else:
             out_list.append(line)
-
-print("replacement is done")
 
 w_file_obj = open(args.io_file, mode='w')
 for f in out_list:
     w_file_obj.write(f+"\n")
 w_file_obj.close()
-
-print("output array - ", out_list)

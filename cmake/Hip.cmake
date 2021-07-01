@@ -129,13 +129,13 @@ IF(HIP_FOUND)
   list(APPEND HIP_CXX_FLAGS -Wno-unused-command-line-argument)
   list(APPEND HIP_CXX_FLAGS -Wno-duplicate-decl-specifier)
 
-  set(HIP_HCC_FLAGS ${HIP_CXX_FLAGS})
+  set(HIP_CLANG_FLAGS ${HIP_CXX_FLAGS})
   # Ask hcc to generate device code during compilation so we can use
   # host linker to link.
-  list(APPEND HIP_HCC_FLAGS -fno-gpu-rdc)
-  list(APPEND HIP_HCC_FLAGS -Wno-defaulted-function-deleted)
+  list(APPEND HIP_CLANG_FLAGS -fno-gpu-rdc)
+  list(APPEND HIP_CLANG_FLAGS -Wno-defaulted-function-deleted)
   foreach(tp_rocm_arch ${TP_ROCM_ARCH})
-    list(APPEND HIP_HCC_FLAGS --amdgpu-target=${tp_rocm_arch})
+    list(APPEND HIP_CLANG_FLAGS --amdgpu-target=${tp_rocm_arch})
   endforeach()
 
   set(hip_DIR ${HIP_PATH}/lib/cmake/hip)
@@ -159,26 +159,4 @@ IF(HIP_FOUND)
 
   set(TP_HIP_INCLUDE ${ROCM_PATH}/include ${TP_HIP_INCLUDE})
   set(TP_HIP_INCLUDE ${hip_INCLUDE_DIRS} $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> $<INSTALL_INTERFACE:include> ${TP_HIP_INCLUDE})
-  message(STATUS "******************************************** tp_hip_include = ${TP_HIP_INCLUDE}")
-  message(STATUS "******************************************** hip_INCLUDE_DIRS = ${HIP_INCLUDE_DIRS}")
 ENDIF()
-
-################################################################################
-function(gloo_hip_add_library target)
-  set(sources ${ARGN})
-  set_source_files_properties(${sources} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
-  hip_add_library(${target} ${sources} ${GLOO_STATIC_OR_SHARED})
-  target_include_directories(${target} PUBLIC ${GLOO_HIP_INCLUDE})
-  target_compile_options(${target} PUBLIC ${HIP_CXX_FLAGS})
-  target_link_libraries(${target} ${gloo_hip_DEPENDENCY_LIBS})
-endfunction()
-
-function(gloo_hip_add_executable target)
-  set(sources ${ARGN})
-  set_source_files_properties(${sources} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
-  hip_add_executable(${target} ${sources})
-  target_include_directories(${target} PUBLIC ${GLOO_HIP_INCLUDE})
-  target_compile_options(${target} PUBLIC ${HIP_CXX_FLAGS})
-  target_link_libraries(${target} ${gloo_hip_DEPENDENCY_LIBS})
-endfunction()
-

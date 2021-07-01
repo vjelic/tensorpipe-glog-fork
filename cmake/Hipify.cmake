@@ -19,9 +19,7 @@ endfunction()
 function(get_file_list FILE_SUFFIX OUTPUT_LIST)
   set(_FULL_FILE_NAME "${CMAKE_BINARY_DIR}/cuda_to_hip_list_${FILE_SUFFIX}.txt")
   file(STRINGS ${_FULL_FILE_NAME} _FILE_LIST)
-  message(STATUS "111111111111111111111111111111111111111111111 ${_FILE_LIST}")
   set(${OUTPUT_LIST}_HIP ${_FILE_LIST} PARENT_SCOPE)
-  message(STATUS "2222222222222222222222222222222222222222 ${OUTPUT_LIST}_HIP")
 endfunction()
 
 function(update_list_with_hip_files FILE_SUFFIX)
@@ -43,7 +41,6 @@ function(get_hipified_list FILE_SUFFIX INPUT_LIST OUTPUT_LIST)
   write_file_list("${FILE_SUFFIX}" "${INPUT_LIST}")
   update_list_with_hip_files("${FILE_SUFFIX}")
   get_file_list("${FILE_SUFFIX}" __temp_srcs)
-  message(STATUS "33333333333333333333333333333333333 ${__temp_srcs_HIP}")
   set(${OUTPUT_LIST} ${__temp_srcs_HIP} PARENT_SCOPE)
 endfunction()
 
@@ -63,4 +60,3 @@ execute_process(
 if (NOT hipify_return_value EQUAL 0)
   message(FATAL_ERROR "Failed to hipify files!")
 endif()
-
