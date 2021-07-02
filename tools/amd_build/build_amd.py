@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(description='Top-level script for HIPifying, fi
 parser.add_argument(
     '--project-directory',
     type=str,
-    help="The root of the project. (default: %(default)s)",
+    help="The root directory of the project. (default: %(default)s)",
     required=True)
 
 parser.add_argument(
@@ -33,9 +33,9 @@ parser.add_argument(
     required=True)
 
 parser.add_argument(
-    '--dump-dict-directory',
+    '--dump-dict-file',
      type=str,
-     help="The Directory to Store the return dict output after hipification",
+     help="The file to Store the return dict output after hipification",
      required=True)
 
 args = parser.parse_args()
@@ -55,6 +55,5 @@ HipifyFinalResult = hipify_python.hipify(
     ignores=ignores,
     is_pytorch_extension=True)
 
-dict_file_name = args.dump_dict_directory + "/hipify_output_dict_dump.txt"
-with open(dict_file_name, 'w') as dict_file:
+with open(args.dump_dict_file, 'w') as dict_file:
     dict_file.write(json.dumps(HipifyFinalResult))

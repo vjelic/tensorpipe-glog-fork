@@ -19,15 +19,14 @@ parser.add_argument(
     required=True)
 
 parser.add_argument(
-    '--dump-dict-directory',
+    '--dump-dict-file',
     type=str,
     help="The Directory when the dictionary output of hipified is stored",
     required=True)
 
 args = parser.parse_args()
 
-dict_file_name = args.dump_dict_directory + "/hipify_output_dict_dump.txt"
-file_obj = open(dict_file_name, mode='r')
+file_obj = open(args.dump_dict_file, mode='r')
 json_string = file_obj.read()
 file_obj.close()
 hipfied_result = json.loads(json_string)

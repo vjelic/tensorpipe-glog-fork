@@ -22,13 +22,14 @@ function(get_file_list FILE_SUFFIX OUTPUT_LIST)
   set(${OUTPUT_LIST}_HIP ${_FILE_LIST} PARENT_SCOPE)
 endfunction()
 
-function(update_list_with_hip_files FILE_SUFFIX)
+function(update_list_with_hip_files FILE_SUFFIX DICT_FILE)
   set(_SCRIPTS_DIR ${PROJECT_SOURCE_DIR}/tools/amd_build)
   set(_FULL_FILE_NAME "${CMAKE_BINARY_DIR}/cuda_to_hip_list_${FILE_SUFFIX}.txt")
   set(_EXE_COMMAND
     ${_SCRIPTS_DIR}/replace_cuda_with_hip_files.py
     --io-file ${_FULL_FILE_NAME}
-    --dump-dict-directory ${CMAKE_BINARY_DIR})
+    #    --dump-dict-file ${CMAKE_BINARY_DIR}/hipify_output_dict_dump.txt)
+    --dump-dict-file ${DICT_FILE})
   execute_process(
     COMMAND ${_EXE_COMMAND}
     RESULT_VARIABLE _return_value)
@@ -37,20 +38,23 @@ function(update_list_with_hip_files FILE_SUFFIX)
   endif()
 endfunction()
 
-function(get_hipified_list FILE_SUFFIX INPUT_LIST OUTPUT_LIST)
+function(get_hipified_list INPUT_LIST OUTPUT_LIST FILE_SUFFIX DICT_FILE)
   write_file_list("${FILE_SUFFIX}" "${INPUT_LIST}")
-  update_list_with_hip_files("${FILE_SUFFIX}")
+  update_list_with_hip_files("${FILE_SUFFIX}" ${DICT_FILE})
   get_file_list("${FILE_SUFFIX}" __temp_srcs)
   set(${OUTPUT_LIST} ${__temp_srcs_HIP} PARENT_SCOPE)
 endfunction()
 
 
 set(HIPIFY_SCRIPTS_DIR ${PROJECT_SOURCE_DIR}/tools/amd_build)
+set(DICT_FILE ${CMAKE_BINARY_DIR}/hipify_output_dict_dump.txt)
+
 set(HIPIFY_COMMAND
   ${HIPIFY_SCRIPTS_DIR}/build_amd.py
   --project-directory ${PROJECT_SOURCE_DIR}
   --output-directory ${PROJECT_SOURCE_DIR}
-  --dump-dict-directory ${CMAKE_BINARY_DIR}
+  #  --dump-dict-file ${CMAKE_BINARY_DIR}/hipify_output_dict_dump.txt
+  --dump-dict-file ${DICT_FILE}
 )
 
 execute_process(
