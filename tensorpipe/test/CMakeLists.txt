@@ -69,13 +69,10 @@ if(TP_ENABLE_CMA)
   add_subdirectory(channel/cma)
 endif()
 
-if(TP_USE_CUDA)
-  find_package(CUDA REQUIRED)
-  list(APPEND TP_TEST_LINK_LIBRARIES ${CUDA_LIBRARIES})
-  list(APPEND TP_TEST_INCLUDE_DIRS ${CUDA_INCLUDE_DIRS})
-  list(APPEND TP_TEST_COMPILE_DEFS TP_USE_CUDA)
+if(TP_USE_CUDA  OR TP_USE_ROCM)
+  set(TP_TEST_CUDA_SRCS)
 
-  list(APPEND TP_TEST_SRCS
+  list(APPEND TP_TEST_CUDA_SRCS
     channel/channel_test_cuda.cc
     channel/channel_test_cuda_multi_gpu.cc
     channel/channel_test_cuda_xdtt.cc
@@ -83,25 +80,50 @@ if(TP_USE_CUDA)
     core/pipe_cuda_test.cc
     )
 
-  list(APPEND TP_TEST_SRCS
-    channel/cuda_xth/cuda_xth_test.cc
-    channel/cuda_basic/cuda_basic_test.cc
-    )
+  if(TP_ENABLE_HIP_XTH)
+    list(APPEND TP_TEST_CUDA_SRCS
+      channel/cuda_xth/cuda_xth_test.cc
+      channel/cuda_basic/cuda_basic_test.cc
+      )
+  endif()
 
-  if(TP_ENABLE_CUDA_IPC)
-    list(APPEND TP_TEST_SRCS
+  if(TP_ENABLE_CUDA_IPC OR TP_ENABLE_HIP_IPC)
+    list(APPEND TP_TEST_CUDA_SRCS
       channel/cuda_ipc/cuda_ipc_test.cc
       )
   endif()
 
-  list(APPEND TP_TEST_SRCS
-    channel/cuda_gdr/cuda_gdr_test.cc
-    )
+  if(TP_ENABLE_CUDA_GDR OR TP_ENABLE_HIP_GDR)
+    list(APPEND TP_TEST_CUDA_SRCS
+      channel/cuda_gdr/cuda_gdr_test.cc
+      )
+  endif()
 
-  cuda_add_library(tensorpipe_cuda_kernel channel/kernel.cu)
-  list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_cuda_kernel)
+  if(TP_USE_ROCM)
+    get_hipified_list("TP_TEST_CUDA_SRCS" "${TP_TEST_CUDA_SRCS}" TP_TEST_CUDA_SRCS)
+  endif()
+  list(APPEND TP_TEST_SRCS ${TP_TEST_CUDA_SRCS})
 
-  list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_cuda)
+  if(TP_USE_CUDA)
+    find_package(CUDA REQUIRED)
+    list(APPEND TP_TEST_LINK_LIBRARIES ${CUDA_LIBRARIES})
+    list(APPEND TP_TEST_INCLUDE_DIRS ${CUDA_INCLUDE_DIRS})
+    list(APPEND TP_TEST_COMPILE_DEFS TP_USE_CUDA)
+
+    cuda_add_library(tensorpipe_cuda_kernel channel/kernel.cu)
+    list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_cuda_kernel)
+
+    list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_cuda)
+  elseif(TP_USE_ROCM)
+    list(APPEND TP_TEST_LINK_LIBRARIES ${TP_HIP_HCC_LIBRARIES})
+    list(APPEND TP_TEST_INCLUDE_DIRS ${TP_HIP_INCLUDE})
+    list(APPEND TP_TEST_COMPILER_DEFS TP_USE_ROCM)
+
+    hip_add_library(tensorpipe_hip_kernel channel/kernel.hip ${TP_HIP_HCC_LIBRARIES} ${HIP_CLANG_FLAGS})
+    list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_hip_kernel)
+
+    list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_hip)
+  endif()
 endif()
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/googletest
