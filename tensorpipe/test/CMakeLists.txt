@@ -100,7 +100,7 @@ if(TP_USE_CUDA  OR TP_USE_ROCM)
   endif()
 
   if(TP_USE_ROCM)
-    get_hipified_list("TP_TEST_CUDA_SRCS" "${TP_TEST_CUDA_SRCS}" TP_TEST_CUDA_SRCS)
+    get_hipified_list("${TP_TEST_CUDA_SRCS}" TP_TEST_CUDA_SRCS)
   endif()
   list(APPEND TP_TEST_SRCS ${TP_TEST_CUDA_SRCS})
 
