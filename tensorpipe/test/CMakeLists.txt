@@ -119,7 +119,7 @@ if(TP_USE_CUDA  OR TP_USE_ROCM)
     list(APPEND TP_TEST_INCLUDE_DIRS ${TP_HIP_INCLUDE})
     list(APPEND TP_TEST_COMPILER_DEFS TP_USE_ROCM)
 
-    hip_add_library(tensorpipe_hip_kernel channel/kernel.hip ${TP_HIP_HCC_LIBRARIES} ${HIP_CLANG_FLAGS})
+    hip_add_library(tensorpipe_hip_kernel channel/kernel.hip ${TP_HIP_HCC_LIBRARIES} HIPCC_OPTIONS ${HIP_CLANG_FLAGS})
     list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_hip_kernel)
 
     list(APPEND TP_TEST_LINK_LIBRARIES tensorpipe_hip)
