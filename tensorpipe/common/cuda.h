@@ -159,7 +159,7 @@ inline int cudaDeviceForPointer(const CudaLib& cudaLib, const void* ptr) {
       cudaLib.pointerGetAttribute(
           &deviceIdx,
           CU_POINTER_ATTRIBUTE_DEVICE_ORDINAL,
-          reinterpret_cast<CUdeviceptr>(ptr)));
+          reinterpret_cast<CUdeviceptr>(const_cast<void *>(ptr))));
 
   TP_CUDA_DRIVER_CHECK(cudaLib, cudaLib.ctxSetCurrent(ctx));
   return deviceIdx;
