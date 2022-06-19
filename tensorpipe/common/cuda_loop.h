@@ -18,6 +18,10 @@
 
 #include <cuda_runtime.h>
 
+#if defined(TP_USE_ROCM)
+  #define CUDART_CB
+#endif
+
 #include <tensorpipe/common/error_macros.h>
 
 namespace tensorpipe {

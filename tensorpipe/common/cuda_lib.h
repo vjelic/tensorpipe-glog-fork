@@ -58,6 +58,12 @@ class NoDevicesError final : public BaseError {
     cuPointerGetAttribute,                                      \
     (void*, CUpointer_attribute, CUdeviceptr))
 
+#if defined(TP_USE_CUDA)
+#define GPU_LIB_NAME "libcuda.so.1"
+#elif defined(TP_USE_ROCM)
+#define GPU_LIB_NAME "libamdhip64.so"
+#endif
+
 // Wrapper for libcuda.
 
 class CudaLib {
@@ -91,7 +97,7 @@ class CudaLib {
     // through this handle and are not exposed (a.k.a., "leaked") to other
     // shared objects.
     std::tie(error, dlhandle) =
-        DynamicLibraryHandle::create("libcuda.so.1", RTLD_LOCAL | RTLD_LAZY);
+        DynamicLibraryHandle::create(GPU_LIB_NAME, RTLD_LOCAL | RTLD_LAZY);
     if (error) {
       return std::make_tuple(std::move(error), CudaLib());
     }
@@ -102,7 +108,7 @@ class CudaLib {
       std::string filename;
       std::tie(error, filename) = dlhandle.getFilename();
       if (error) {
-        return "Couldn't determine location of shared library libcuda.so.1: " +
+        return "Couldn't determine location of shared library" GPU_LIB_NAME +
             error.what();
       }
       return "Found shared library libcuda.so.1 at " + filename;
