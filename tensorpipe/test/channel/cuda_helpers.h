@@ -22,6 +22,14 @@
 
 namespace tensorpipe {
 
+inline pid_t getPid(const nvmlProcessInfo_t& procInfo) {
+#ifdef TP_USE_ROCM
+  return procInfo.process_id;
+#else
+  return procInfo.pid;
+#endif
+}
+
 inline bool isContextOpenOnDevice(const NvmlLib& nvmlLib, nvmlDevice_t device) {
   unsigned int count = 0;
   std::vector<nvmlProcessInfo_t> processInfos;
@@ -40,7 +48,7 @@ inline bool isContextOpenOnDevice(const NvmlLib& nvmlLib, nvmlDevice_t device) {
 
   pid_t myPid = ::getpid();
   for (const nvmlProcessInfo_t& processInfo : processInfos) {
-    if (processInfo.pid == myPid) {
+    if (getPid(processInfo) == myPid) {
       return true;
     }
   }
