@@ -19,17 +19,17 @@
 #include <tensorpipe/common/defs.h>
 #include <tensorpipe/common/dl.h>
 
-#if defined(TP_USE_ROCM)
-#define TP_NVML_CHECK(nvml_lib, a)                                \
-  do {                                                            \
-    nvmlReturn_t error = (a);                                     \
-    if (error != NVML_SUCCESS) {                                  \
-      const char* errorStr;                                       \
-      (nvml_lib).tp_rsmi_errorString(error, &errorStr);           \
-      TP_THROW_ASSERT() << __TP_EXPAND_OPD(a) << " " << errorStr; \
-    }                                                             \
-  } while (false)
-#else
+// #if defined(TP_USE_ROCM)
+// #define TP_NVML_CHECK(nvml_lib, a)                                \
+//   do {                                                            \
+//     nvmlReturn_t error = (a);                                     \
+//     if (error != NVML_SUCCESS) {                                  \
+//       const char* errorStr;                                       \
+//       (nvml_lib).tp_rsmi_errorString(error, &errorStr);           \
+//       TP_THROW_ASSERT() << __TP_EXPAND_OPD(a) << " " << errorStr; \
+//     }                                                             \
+//   } while (false)
+// #else
 #define TP_NVML_CHECK(nvml_lib, a)                                \
   do {                                                            \
     nvmlReturn_t error = (a);                                     \
@@ -39,33 +39,39 @@
       TP_THROW_ASSERT() << __TP_EXPAND_OPD(a) << " " << errorStr; \
     }                                                             \
   } while (false)
-#endif
+// #endif
 
 namespace tensorpipe {
 
 // Master list of all symbols we care about from libnvidia-ml.
 
+// #ifndef TP_USE_ROCM
+//   #define TP_USE_ROCM
+// #endif
 #if defined(TP_USE_ROCM)
 #define TP_FORALL_NVML_SYMBOLS(_)                                             \
-  _(tp_rsmi_deviceGetComputeRunningProcesses,                                    \
+  _(tp_rsmi_deviceGetComputeRunningProcesses,                                 \
     rsmi_compute_process_info_get,                                            \
     rsmi_status_t,                                                            \
-    (rsmi_process_info_t, uint32_t*))                                         \
-  _(tp_rsmi_deviceGetCount_v2, rsmi_num_monitor_devices, rsmi_status_t,    \
-    (uint32_t *)) \
-  _(tp_rsmi_deviceGetP2PStatus,  \
-    rsmi_is_P2P_accessible, rsmi_status_t, \
-    (uint32_t dv_ind_src, uint32_t dv_ind_dst, bool *accessible)) \
-  _(tp_rsmi_deviceGetUUID, \
-    rsmi_dev_unique_id_get, rsmi_status_t, \
-    (uint32_t dv_ind, uint64_t *id)) \
-  _(tp_rsmi_errorString,\
-    rsmi_status_string, \
-    rsmi_status_t, (rsmi_status_t status, const char **status_string))  \
-  _(tp_rsmi_init, \
-    rsmi_init, rsmi_status_t, (uint64_t init_flags)) \
-  _(tp_rsmi_shutdown, \
-    rsmi_shut_down, rsmi_status_t, (void))
+    (rsmi_process_info_t*, uint32_t*))                                        \
+  _(tp_rsmi_deviceGetCount_v2,                                                \
+    rsmi_num_monitor_devices,                                                 \
+    rsmi_status_t,                                                            \
+    (uint32_t*))                                                              \
+  _(tp_rsmi_deviceGetP2PStatus,                                               \
+    rsmi_is_P2P_accessible,                                                   \
+    rsmi_status_t,                                                            \
+    (uint32_t, uint32_t, bool*))                                              \
+  _(tp_rsmi_deviceGetUUID,                                                    \
+    rsmi_dev_unique_id_get,                                                   \
+    rsmi_status_t,                                                            \
+    (uint32_t, uint64_t*))                                                    \
+  _(tp_rsmi_errorString,                                                      \
+    rsmi_status_string,                                                       \
+    rsmi_status_t,                                                            \
+    (rsmi_status_t, const char**))                                            \
+  _(tp_rsmi_init, rsmi_init, rsmi_status_t, (uint64_t init_flags))            \
+  _(tp_rsmi_shutdown, rsmi_shut_down, rsmi_status_t, (void))
 #else
 #define TP_FORALL_NVML_SYMBOLS(_)                                             \
   _(deviceGetComputeRunningProcesses,                                         \
@@ -92,7 +98,7 @@ namespace tensorpipe {
   _(errorString, nvmlErrorString, const char*, (nvmlReturn_t))                \
   _(init_v2, nvmlInit_v2, nvmlReturn_t, ())                                   \
   _(shutdown, nvmlShutdown, nvmlReturn_t, ())
-  #endif
+#endif
 
 // Wrapper for libnvidia-ml.
 
@@ -189,20 +195,17 @@ class NvmlLib {
     }
   }
 #if defined(TP_USE_ROCM)
-  rsmi_status_t deviceGetComputeRunningProcesses(nvmlDevice_t, unsigned int*, nvmlProcessInfo_t*) {
+  rsmi_status_t deviceGetComputeRunningProcesses(nvmlDevice_t device, unsigned int* num_items, nvmlProcessInfo_t* procs) const {
     //nvmlDeviceGetComputeRunningProcesses
-//tp_rsmi_deviceGetComputeRunningProcesses,                                    \
-//    rsmi_compute_process_info_get,                                            \
-//    rsmi_status_t,                                                            \
-//    (rsmi_process_info_t, uint32_t*)
-  }
-  rsmi_status_t deviceGetCount_v2(unsigned int*) {
-  //nvmlDeviceGetCount_v2
-//tp_rsmi_deviceGetCount_v2, rsmi_num_monitor_devices, rsmi_status_t,    \
-//    (uint32_t *)
+    return tp_rsmi_deviceGetComputeRunningProcesses(procs, num_items);
   }
 
-  rsmi_status_t deviceGetP2PStatus(nvmlDevice_t dev_src, nvmlDevice_t dev_dst, nvmlGpuP2PCapsIndex_t p2pCaps, nvmlGpuP2PStatus_t* res) {
+  rsmi_status_t deviceGetCount_v2(unsigned int* num_devices) const {
+    //nvmlDeviceGetCount_v2
+    return tp_rsmi_deviceGetCount_v2(num_devices);
+  }
+
+  rsmi_status_t deviceGetP2PStatus(nvmlDevice_t dev_src, nvmlDevice_t dev_dst, nvmlGpuP2PCapsIndex_t p2pCaps, nvmlGpuP2PStatus_t* res) const {
     //nvmlDeviceGetP2PStatus
     //nvmlGpuP2PCapsIndex_t and nvmlGpuP2PStatus_t(output) are enums
     //tp_rsmi_deviceGetP2PStatus(uint32_t dv_ind_src, uint32_t dv_ind_dst, bool *accessible)
@@ -210,18 +213,30 @@ class NvmlLib {
     bool accessible;
     ret = tp_rsmi_deviceGetP2PStatus(dev_src, dev_dst, &accessible);
     // Need to change the logic at calling function
-    //*res = static_cast<nvmlGpuP2PStatus_t*>(accessible);
+    *res = static_cast<nvmlGpuP2PStatus_t>(!accessible);
     return ret;
   }
 
-  rsmi_status_t deviceGetUUID((nvmlDevice_t dev_id, char* uuid_str, unsigned int size)) {
+  rsmi_status_t deviceGetUUID(nvmlDevice_t dev_id, char* uuid_str, unsigned int size) const {
     // arg1 - uint32_t
     // arg2 - uint64_t*
-    return tp_rsmi_deviceGetUUID(dv_ind, static_cast<uint64_t *>(uuid_str));
+    return tp_rsmi_deviceGetUUID(dev_id, reinterpret_cast<uint64_t *>(uuid_str));
   }
+
+  rsmi_status_t deviceGetHandleByUUID(const char* uuid_str, nvmlDevice_t* device) const {
+    return NVML_SUCCESS;
+  }
+
+  const char* errorString(nvmlReturn_t result) const {
+    const char* errorStr;
+    tp_rsmi_errorString(result, &errorStr);
+    return errorStr;
+  }
+
   rsmi_status_t init_v2() {
-    return tp_rsmi_init(uint64_t(RSMI_INIT_FLAG_ALL_GPUS));
+    return tp_rsmi_init(static_cast<uint64_t>(RSMI_INIT_FLAG_ALL_GPUS));
   }
+
   rsmi_status_t shutdown() {
     return tp_rsmi_shutdown();
   }
