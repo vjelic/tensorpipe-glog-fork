@@ -91,6 +91,12 @@ namespace tensorpipe {
   _(shutdown, nvmlShutdown, nvmlReturn_t, ())
 #endif
 
+#if defined(TP_USE_CUDA)
+#define SMI_LIB_NAME "libnvidia-ml.so.1"
+#elif defined(TP_USE_ROCM)
+#define SMI_LIB_NAME "librocm_smi64.so"
+#endif
+
 // Wrapper for libnvidia-ml.
 
 class NvmlLib {
@@ -144,7 +150,7 @@ class NvmlLib {
     // through this handle and are not exposed (a.k.a., "leaked") to other
     // shared objects.
     std::tie(error, dlhandle) = DynamicLibraryHandle::create(
-        "libnvidia-ml.so.1", RTLD_LOCAL | RTLD_LAZY);
+        SMI_LIB_NAME, RTLD_LOCAL | RTLD_LAZY);
     if (error) {
       return std::make_tuple(std::move(error), NvmlLib());
     }
@@ -220,7 +226,7 @@ class NvmlLib {
   }
 
   rsmi_status_t init_v2() {
-    return tp_rsmi_init(static_cast<uint64_t>(RSMI_INIT_FLAG_ALL_GPUS));
+    return tp_rsmi_init(static_cast<uint64_t>(0));
   }
   rsmi_status_t shutdown() {
     return tp_rsmi_shutdown();

@@ -268,6 +268,7 @@ if(TP_USE_CUDA OR TP_USE_ROCM)
       channel/cuda_xth/factory.cc)
     list(APPEND TP_CUDA_PUBLIC_HDRS
       channel/cuda_xth/factory.h)
+    set(TENSORPIPE_HAS_CUDA_XTH_CHANNEL 1)
   endif()
 
   ### cuda_basic
