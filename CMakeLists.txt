@@ -24,6 +24,7 @@ include(MiscCheck)
 # ROCm related
 if (TP_USE_ROCM)
   include(Hip)
+  enable_language(HIP)
   if(TP_HAVE_HIP)
     list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/third_party/hipify/cmake")
     include(Hipify)

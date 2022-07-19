@@ -302,7 +302,7 @@ if(TP_USE_CUDA OR TP_USE_ROCM)
     TP_ENABLE_CUDA_GDR "Enable CUDA GpuDirect (InfiniBand) channel" "LINUX")
   TP_CONDITIONAL_BACKEND(
     TP_ENABLE_HIP_GDR "Enable HIP GpuDirect (InfiniBand) channel" "LINUX")
-  if((TP_ENABLE_CUDA_GDR AND TP_USE_CUDA) OR (TP_ENABLE_HIP_GDR AND TP_USE_ROCM))
+  if(TP_ENABLE_CUDA_GDR OR TP_ENABLE_HIP_GDR)
     list(APPEND TP_CUDA_SRCS
       common/ibv.cc
       channel/cuda_gdr/channel_impl.cc
