@@ -268,6 +268,7 @@ if(TP_USE_CUDA OR TP_USE_ROCM)
       channel/cuda_xth/factory.cc)
     list(APPEND TP_CUDA_PUBLIC_HDRS
       channel/cuda_xth/factory.h)
+    set(TENSORPIPE_HAS_CUDA_XTH_CHANNEL 1)
   endif()
 
   ### cuda_basic
@@ -302,7 +303,7 @@ if(TP_USE_CUDA OR TP_USE_ROCM)
     TP_ENABLE_CUDA_GDR "Enable CUDA GpuDirect (InfiniBand) channel" "LINUX")
   TP_CONDITIONAL_BACKEND(
     TP_ENABLE_HIP_GDR "Enable HIP GpuDirect (InfiniBand) channel" "LINUX")
-  if(TP_ENABLE_CUDA_GDR OR TP_ENABLE_HIP_GDR)
+  if((TP_ENABLE_CUDA_GDR AND TP_USE_CUDA) OR (TP_ENABLE_HIP_GDR AND TP_USE_ROCM))
     list(APPEND TP_CUDA_SRCS
       common/ibv.cc
       channel/cuda_gdr/channel_impl.cc

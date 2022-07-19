@@ -76,6 +76,7 @@ if(TP_USE_CUDA  OR TP_USE_ROCM)
     channel/channel_test_cuda.cc
     channel/channel_test_cuda_multi_gpu.cc
     channel/channel_test_cuda_xdtt.cc
+    channel/cuda_basic/cuda_basic_test.cc
     common/cuda_test.cc
     core/pipe_cuda_test.cc
     )
@@ -83,7 +84,6 @@ if(TP_USE_CUDA  OR TP_USE_ROCM)
   if(TP_ENABLE_HIP_XTH)
     list(APPEND TP_TEST_CUDA_SRCS
       channel/cuda_xth/cuda_xth_test.cc
-      channel/cuda_basic/cuda_basic_test.cc
       )
   endif()
 
@@ -93,13 +93,14 @@ if(TP_USE_CUDA  OR TP_USE_ROCM)
       )
   endif()
 
-  if(TP_ENABLE_CUDA_GDR OR TP_ENABLE_HIP_GDR)
+  if((TP_ENABLE_CUDA_GDR AND TP_USE_CUDA) OR (TP_ENABLE_HIP_GDR AND TP_USE_ROCM))
     list(APPEND TP_TEST_CUDA_SRCS
       channel/cuda_gdr/cuda_gdr_test.cc
       )
   endif()
 
   if(TP_USE_ROCM)
+    get_hipified_list("${TP_TEST_SRCS}" TP_TEST_SRCS)
     get_hipified_list("${TP_TEST_CUDA_SRCS}" TP_TEST_CUDA_SRCS)
   endif()
   list(APPEND TP_TEST_SRCS ${TP_TEST_CUDA_SRCS})

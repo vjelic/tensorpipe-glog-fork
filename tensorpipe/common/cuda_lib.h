@@ -15,12 +15,6 @@
 #include <tensorpipe/common/defs.h>
 #include <tensorpipe/common/dl.h>
 
-#if defined(TP_USE_ROCM)
-typedef struct CUuuid_st {
-  char bytes[16];
-}CUuuid;
-#endif
-
 #define TP_CUDA_DRIVER_CHECK(cuda_lib, a)                                 \
   do {                                                                    \
     CUresult error = (a);                                                 \
