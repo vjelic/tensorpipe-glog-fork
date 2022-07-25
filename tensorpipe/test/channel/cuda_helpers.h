@@ -13,6 +13,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <iostream>
 
 #include <gtest/gtest.h>
 
@@ -31,6 +32,24 @@ inline pid_t getPid(const nvmlProcessInfo_t& procInfo) {
 }
 
 inline bool isContextOpenOnDevice(const NvmlLib& nvmlLib, nvmlDevice_t device) {
+#ifdef TP_USE_ROCM
+  pid_t myPid = ::getpid();
+  unsigned int count = 0;
+  std::vector<nvmlDevice_t> deviceIndexes;
+  
+  // Query number of devices used by process before getting the device indexes.
+  nvmlLib.deviceGetComputeRunningGpus(myPid, nullptr, &count);
+  deviceIndexes.resize(count);
+  nvmlReturn_t res = nvmlLib.deviceGetComputeRunningGpus(myPid, deviceIndexes.data(), &count);
+  TP_NVML_CHECK(nvmlLib, res);
+
+  for (nvmlDevice_t index : deviceIndexes) {
+    if (index == device) {
+      return true;
+    }
+  }
+  return false;
+#else
   unsigned int count = 0;
   std::vector<nvmlProcessInfo_t> processInfos;
   while (true) {
@@ -53,6 +72,7 @@ inline bool isContextOpenOnDevice(const NvmlLib& nvmlLib, nvmlDevice_t device) {
     }
   }
   return false;
+#endif
 }
 
 inline ::testing::AssertionResult initializedCudaContexts(
@@ -77,7 +97,11 @@ inline ::testing::AssertionResult initializedCudaContexts(
   std::vector<std::string> uuids = getUuidsOfVisibleDevices(cudaLib);
   for (int deviceIdx = 0; deviceIdx < uuids.size(); deviceIdx++) {
     // NVML uses a different format for UUIDs.
+#ifdef TP_USE_ROCM
+    std::string nvmlUuid = uuids[deviceIdx];
+#else
     std::string nvmlUuid = "GPU-" + uuids[deviceIdx];
+#endif
     nvmlDevice_t nvmlDevice;
     TP_NVML_CHECK(
         nvmlLib, nvmlLib.deviceGetHandleByUUID(nvmlUuid.c_str(), &nvmlDevice));
