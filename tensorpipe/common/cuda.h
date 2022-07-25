@@ -274,6 +274,16 @@ inline std::string getUuidOfDevice(const CudaLib& cudaLib, int deviceIdx) {
   CUuuid uuid;
   TP_CUDA_DRIVER_CHECK(cudaLib, cudaLib.deviceGetUuid(&uuid, device));
 
+#ifdef TP_USE_ROCM
+  // The ROCM driver and rocm-smi choose two different format for UUIds, so
+  // we'll choose to use the rocm-smi format to stay consistent within the library.
+  std::string uuidStr = std::string(uuid.bytes, 16);
+  uint64_t uuidNum = strtoul(uuidStr.c_str(), nullptr, 16);
+  const char* uuidPtr = reinterpret_cast<const char*>(&uuidNum);
+  char bytes[8];
+  std::copy(uuidPtr, uuidPtr + sizeof(uuidNum), bytes);
+  uuidStr = std::string(bytes, 8);
+#else
   // The CUDA driver and NVML choose two different format for UUIDs, hence we
   // need to reconcile them. We do so using the most human readable format, that
   // is "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" (8-4-4-4-12).
@@ -292,6 +302,7 @@ inline std::string getUuidOfDevice(const CudaLib& cudaLib, int deviceIdx) {
   TP_THROW_ASSERT_IF(!isValidUuid(uuidStr))
       << "Couldn't obtain valid UUID for GPU #" << deviceIdx
       << " from CUDA driver. Got: " << uuidStr;
+#endif
 
   return uuidStr;
 }

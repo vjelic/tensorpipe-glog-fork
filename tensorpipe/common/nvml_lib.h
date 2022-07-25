@@ -54,6 +54,10 @@ namespace tensorpipe {
     rsmi_compute_process_info_get,                                            \
     rsmi_status_t,                                                            \
     (rsmi_process_info_t*, uint32_t*))                                        \
+  _(tp_rsmi_deviceGetRunningComputeGpus,                                             \
+    rsmi_compute_process_gpus_get,                                            \
+    rsmi_status_t,                                                            \
+    (uint32_t, uint32_t*, uint32_t*))                                         \
   _(tp_rsmi_deviceGetCount_v2,                                                \
     rsmi_num_monitor_devices,                                                 \
     rsmi_status_t,                                                            \
@@ -98,6 +102,10 @@ namespace tensorpipe {
   _(errorString, nvmlErrorString, const char*, (nvmlReturn_t))                \
   _(init_v2, nvmlInit_v2, nvmlReturn_t, ())                                   \
   _(shutdown, nvmlShutdown, nvmlReturn_t, ())
+#endif
+
+#ifdef TP_USE_ROCM
+#define NVML_DEVICE_UUID_BUFFER_SIZE 8
 #endif
 
 #if defined(TP_USE_CUDA)
@@ -200,6 +208,8 @@ class NvmlLib {
       TP_NVML_CHECK(*this, shutdown());
     }
   }
+
+// #define TP_USE_ROCM
 #if defined(TP_USE_ROCM)
   rsmi_status_t deviceGetComputeRunningProcesses(nvmlDevice_t device, unsigned int* num_items, nvmlProcessInfo_t* procs) const {
     //nvmlDeviceGetComputeRunningProcesses
@@ -209,6 +219,15 @@ class NvmlLib {
   rsmi_status_t deviceGetCount_v2(unsigned int* num_devices) const {
     //nvmlDeviceGetCount_v2
     return tp_rsmi_deviceGetCount_v2(num_devices);
+  }
+
+  rsmi_status_t deviceGetHandleByIndex_v2 (unsigned int index, nvmlDevice_t* handle) const {
+    *handle = index;
+    return RSMI_STATUS_SUCCESS;
+  }
+
+  rsmi_status_t deviceGetComputeRunningGpus(uint32_t pid, nvmlDevice_t* devices, uint32_t* num_devices) const {
+    return tp_rsmi_deviceGetRunningComputeGpus(pid, devices, num_devices);
   }
 
   rsmi_status_t deviceGetP2PStatus(nvmlDevice_t dev_src, nvmlDevice_t dev_dst, nvmlGpuP2PCapsIndex_t p2pCaps, nvmlGpuP2PStatus_t* res) const {
@@ -230,7 +249,28 @@ class NvmlLib {
   }
 
   rsmi_status_t deviceGetHandleByUUID(const char* uuid_str, nvmlDevice_t* device) const {
-    return NVML_SUCCESS;
+    // printf("UUID recv'd: %lu\n", *(uint64_t*)uuid_str);
+    rsmi_status_t ret;
+    uint32_t num_devices;
+    ret = tp_rsmi_deviceGetCount_v2(&num_devices);
+    if (ret != 0) {
+      return ret;
+    }
+
+    for (uint32_t i = 0; i < num_devices; i++) {
+      uint64_t uuid;
+      ret = tp_rsmi_deviceGetUUID(i, &uuid);
+      if (ret != 0) {
+        return ret;
+      }
+      // printf("UUID: %lu\n", uuid);
+      if (uuid == *reinterpret_cast<const uint64_t*>(uuid_str)) {
+        *device = i;
+        return RSMI_STATUS_SUCCESS;
+      }
+    }
+
+    return RSMI_STATUS_NOT_FOUND;
   }
 
   const char* errorString(nvmlReturn_t result) const {
