@@ -248,7 +248,7 @@ void ChannelImpl::copyFromSourceToStaging(ChunkSendOpIter opIter) {
         cudaMemcpyDeviceToDevice,
         op.stream));
   }
-  op.event->record(op.stream);
+  // op.event->record(op.stream);
 }
 
 void ChannelImpl::writeDescriptor(ChunkSendOpIter opIter) {
@@ -460,7 +460,7 @@ void ChannelImpl::copyFromStagingToTarget(ChunkRecvOpIter opIter) {
         cudaMemcpyDeviceToDevice,
         op.stream));
   }
-  outbox.events[op.remoteSlotIdx]->record(op.stream);
+  // outbox.events[op.remoteSlotIdx]->record(op.stream);
 
   TP_VLOG(6) << "Channel " << id_ << " done copying payload (#"
              << op.sequenceNumber << ")";

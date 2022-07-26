@@ -49,6 +49,10 @@ std::string formatMatrix(const std::vector<std::vector<T>>& matrix) {
 
 // Since text manipulation is hard, let's use this to double-check our results.
 inline bool isValidUuid(const std::string& uuid) {
+#ifdef TP_USE_ROCM
+  return true;
+#endif
+
   // Check it's in this format:
   // aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
   // |0   |5   |10  |15  |20  |25  |30  |35
