@@ -15,9 +15,11 @@
 #include <tensorpipe/common/cuda_buffer.h>
 
 // Channels
-
 #include <tensorpipe/channel/cuda_basic/factory.h>
+
+#if TENSORPIPE_HAS_CUDA_XTH_CHANNEL
 #include <tensorpipe/channel/cuda_xth/factory.h>
+#endif
 
 #if TENSORPIPE_HAS_CUDA_GDR_CHANNEL
 #include <tensorpipe/channel/cuda_gdr/factory.h>

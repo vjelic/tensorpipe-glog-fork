@@ -129,6 +129,8 @@ IF(HIP_FOUND)
   list(APPEND HIP_CXX_FLAGS -Wno-unused-command-line-argument)
   list(APPEND HIP_CXX_FLAGS -Wno-duplicate-decl-specifier)
 
+  add_compile_options(-D__HIP_PLATFORM_HCC__=1)
+
   set(HIP_CLANG_FLAGS ${HIP_CXX_FLAGS})
   # Ask hcc to generate device code during compilation so we can use
   # host linker to link.
