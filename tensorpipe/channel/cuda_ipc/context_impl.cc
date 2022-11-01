@@ -62,10 +62,12 @@ getGlobalUuidsAndP2pSupport(const NvmlLib& nvmlLib) {
         nvmlLib,
         nvmlLib.deviceGetUUID(devices[devIdx], uuid.data(), uuid.size()));
     std::string uuidStr(uuid.data());
+#ifndef TP_USE_ROCM
     TP_THROW_ASSERT_IF(uuidStr.substr(0, 4) != "GPU-")
         << "Couldn't obtain valid UUID for GPU #" << devIdx
         << " from CUDA driver. Got: " << uuidStr;
     uuidStr = uuidStr.substr(4);
+#endif
     TP_THROW_ASSERT_IF(!isValidUuid(uuidStr))
         << "Couldn't obtain valid UUID for GPU #" << devIdx
         << " from NVML. Got: " << uuidStr;
@@ -224,12 +226,14 @@ std::shared_ptr<ContextImpl> ContextImpl::create() {
     cudaDeviceProp props;
     TP_CUDA_CHECK(cudaGetDeviceProperties(&props, device.index));
 
+#ifndef TP_USE_ROCM
     // Unified addressing is required for IPC.
     if (!props.unifiedAddressing) {
       TP_VLOG(4) << "CUDA IPC channel is not viable because CUDA device "
                  << device.index << " does not have unified addressing";
       return nullptr;
     }
+#endif    
 
     // The other two compute modes are "exclusive" and "prohibited", both of
     // which prevent access from an other process.
