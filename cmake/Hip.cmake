@@ -13,10 +13,6 @@ ELSE()
   SET(HIP_PATH $ENV{HIP_PATH})
 ENDIF()
 
-IF(NOT EXISTS ${HIP_PATH})
-  return()
-ENDIF()
-
 # HCC_PATH
 IF(NOT DEFINED ENV{HCC_PATH})
   SET(HCC_PATH ${ROCM_PATH}/hcc)
@@ -94,7 +90,7 @@ ELSE()
 ENDIF()
 
 # Add HIP to the CMAKE Module Path
-set(CMAKE_MODULE_PATH ${HIP_PATH}/cmake ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${ROCM_PATH}/lib/cmake/hip ${CMAKE_MODULE_PATH})
 
 # Disable Asserts In Code (Can't use asserts on HIP stack.)
 ADD_DEFINITIONS(-DNDEBUG)
@@ -111,6 +107,23 @@ IF(HIP_FOUND)
     set(hip_library_name hip_hcc)
   endif()
   message("HIP library name: ${hip_library_name}")
+
+  # ROCm 6.0 onwards, /opt/rocm/hip doesnt exist
+  if(NOT EXISTS ${HIP_PATH})
+    set(HIP_PATH ${ROCM_PATH})
+    set(ROCRAND_PATH ${ROCM_PATH})
+    set(HIPRAND_PATH ${ROCM_PATH})
+    set(ROCBLAS_PATH ${ROCM_PATH})
+    set(MIOPEN_PATH ${ROCM_PATH})
+    set(ROCFFT_PATH ${ROCM_PATH})
+    set(HIPFFT_PATH ${ROCM_PATH})
+    set(HIPSPARSE_PATH ${ROCM_PATH})
+    set(RCCL_PATH ${ROCM_PATH})
+    set(ROCPRIM_PATH ${ROCM_PATH})
+    set(HIPCUB_PATH ${ROCM_PATH})
+    set(ROCTHRUST_PATH ${ROCM_PATH})
+    set(HIPSOLVER_PATH ${ROCM_PATH})
+  endif()
 
   set(CMAKE_HCC_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
   set(CMAKE_HCC_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
